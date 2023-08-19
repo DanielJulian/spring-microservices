@@ -1,5 +1,5 @@
 postgres-match/
-HELP.md
+DUMMY_LOGIC.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
