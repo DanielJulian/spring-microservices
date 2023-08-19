@@ -1,0 +1,19 @@
+---
+version: '3.7'
+services:
+  postgres-match-service:
+    container_name: postgres-match-service
+    image: postgres
+    environment:
+      POSTGRES_DB: match_service
+      POSTGRES_USER: danny
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-match:/data/postgres
+    expose:
+      - "5434"
+    ports:
+      - "5434:5431"
+    command: -p 5431
+    restart: always
