@@ -1,8 +1,10 @@
 package com.dannyjulian.matchservice.service;
 
 import com.dannyjulian.matchservice.dto.MatchRequest;
+import com.dannyjulian.matchservice.dto.MatchResponse;
 import com.dannyjulian.matchservice.model.MatchItem;
 import com.dannyjulian.matchservice.repository.MatchRepository;
+import com.dannyjulian.matchservice.util.BidOrAsk;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,7 +25,7 @@ public class MatchService {
                 .map(this::getMatchRequest).toList();
     }
 
-    public String doMatch(MatchRequest matchRequest) {
+    public MatchResponse doMatch(MatchRequest matchRequest) {
         MatchItem matchItem = getMatchItem(matchRequest);
         matchRepository.save(matchItem);
 
@@ -32,7 +34,9 @@ public class MatchService {
             case BID -> matchAsk(matchItem);
         }
 
-        return "Match done for BID/ASK with qty ... ...";
+        return MatchResponse.builder()
+                .matchSucceeded(false)
+                .build();
     }
 
     // If its a BID(BUY):

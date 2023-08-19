@@ -1,6 +1,7 @@
 package com.dannyjulian.matchservice.controller;
 
 import com.dannyjulian.matchservice.dto.MatchRequest;
+import com.dannyjulian.matchservice.dto.MatchResponse;
 import com.dannyjulian.matchservice.service.MatchService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +20,8 @@ public class MatchController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public String findMatch(@RequestBody MatchRequest matchRequest) {
-        String result = matchService.doMatch(matchRequest);
-        return result; // TODO Return json object
+    public MatchResponse findMatch(@RequestBody MatchRequest matchRequest) {
+        return matchService.doMatch(matchRequest);
     }
 
     //http://localhost:8082/api/match?guid=SOMEGUID
