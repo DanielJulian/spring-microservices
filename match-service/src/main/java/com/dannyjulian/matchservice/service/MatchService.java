@@ -4,8 +4,9 @@ import com.dannyjulian.matchservice.dto.MatchRequest;
 import com.dannyjulian.matchservice.dto.MatchResponse;
 import com.dannyjulian.matchservice.model.MatchItem;
 import com.dannyjulian.matchservice.repository.MatchRepository;
-import com.dannyjulian.matchservice.util.BidOrAsk;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,10 +21,12 @@ public class MatchService {
         this.matchRepository = matchRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<MatchRequest> getMatchesByGuid(String guid) {
         return matchRepository.findAllByGuid(guid).stream()
                 .map(this::getMatchRequest).toList();
     }
+
 
     public MatchResponse doMatch(MatchRequest matchRequest) {
         MatchItem matchItem = getMatchItem(matchRequest);
