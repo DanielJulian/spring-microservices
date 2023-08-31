@@ -1,17 +1,17 @@
-package com.dannyjulian.matchservice.dto;
+package com.dannyjulian.orderservice.dto;
 
-import com.dannyjulian.matchservice.util.BidOrAsk;
-import jakarta.persistence.*;
-import lombok.*;
+import com.dannyjulian.orderservice.util.BidOrAsk;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 public class MatchRequest {
 
     private String guid;

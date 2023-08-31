@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.CompletableFuture;
-
 @RestController
 @RequestMapping("/api/order")
 @RequiredArgsConstructor // Creates a constructor at compile time for the class variables. This helps with dependency injection.
@@ -20,8 +18,8 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public String placeOrder(@RequestBody OrderRequest orderRequest) {
-        orderService.placeOrder(orderRequest);
-        return "Order placed";
+        log.info("Place Order request received: " + orderRequest);
+        return orderService.placeOrder(orderRequest);
     }
 
 

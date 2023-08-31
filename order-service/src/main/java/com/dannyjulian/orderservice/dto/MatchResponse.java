@@ -1,21 +1,19 @@
-package com.dannyjulian.matchservice.dto;
+package com.dannyjulian.orderservice.dto;
 
-import com.dannyjulian.matchservice.util.BidOrAsk;
-import jakarta.persistence.*;
+import com.dannyjulian.orderservice.util.BidOrAsk;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-public class MatchRequest {
-
+@Builder
+public class MatchResponse {
     private String guid;
     private BigDecimal price;
     private Integer quantity;
     private BidOrAsk bidOrAsk;
+    private boolean matchSucceeded;
 }

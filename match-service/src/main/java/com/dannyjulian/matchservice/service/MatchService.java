@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +39,11 @@ public class MatchService {
         }
 
         return MatchResponse.builder()
-                .matchSucceeded(false)
+                .matchSucceeded(new Random().nextBoolean())
+                .bidOrAsk(matchItem.getBidOrAsk())
+                .price(matchRequest.getPrice())
+                .quantity(matchRequest.getQuantity())
+                .guid(matchRequest.getGuid())
                 .build();
     }
 
