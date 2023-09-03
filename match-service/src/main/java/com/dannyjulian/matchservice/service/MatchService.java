@@ -5,15 +5,17 @@ import com.dannyjulian.matchservice.dto.MatchResponse;
 import com.dannyjulian.matchservice.model.MatchItem;
 import com.dannyjulian.matchservice.repository.MatchRepository;
 
+import com.dannyjulian.matchservice.util.BidOrAsk;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class MatchService {
 
     private final MatchRepository matchRepository;
@@ -29,21 +31,25 @@ public class MatchService {
     }
 
 
+    @Transactional
     public MatchResponse doMatch(MatchRequest matchRequest) {
         MatchItem matchItem = getMatchItem(matchRequest);
         matchRepository.save(matchItem);
 
-        switch (matchItem.getBidOrAsk()) {
-            case ASK -> matchBid(matchItem);
-            case BID -> matchAsk(matchItem);
-        }
+        List<MatchItem> matchedItems = switch (matchItem.getBidOrAsk()) {
+            case ASK -> matchAsk(matchItem);
+            case BID -> matchBid(matchItem);
+        };
+
+        log.info("Matched items: {}", matchedItems);
+        boolean matched = !matchedItems.isEmpty();
 
         return MatchResponse.builder()
-                .matchSucceeded(new Random().nextBoolean())
+                .matchSucceeded(matched)
                 .bidOrAsk(matchItem.getBidOrAsk())
-                .price(matchRequest.getPrice())
-                .quantity(matchRequest.getQuantity())
-                .guid(matchRequest.getGuid())
+                .price(matchItem.getPrice())
+                .quantity(matchItem.getQuantity())
+                .guid(matchItem.getGuid())
                 .build();
     }
 
@@ -53,21 +59,45 @@ public class MatchService {
     //- substract quantities (ask qty must not be negative)
     //- If ask qty is not enough to supply the bid, find the next closest ask and repeat the process.
 
-    private String matchBid(MatchItem matchItem) {
-        String result = "Not matched";
+    private List<MatchItem> matchBid(MatchItem matchItem) {
+        List<MatchItem> matchedItems = new ArrayList<>();
 
-        List<MatchItem> matchItemList = matchRepository.findAllByGuid(matchItem.getGuid());
-        matchItemList = matchItemList.stream().filter(i -> i.getBidOrAsk() == matchItem.getBidOrAsk()).collect(Collectors.toList());
-        if (!matchItemList.isEmpty()) {
-            MatchItem closestItem = getClosestByPrice(matchItemList, matchItem.getPrice());
-            substractQty(closestItem, matchItem);  // Before doing the substraction get all the required items and do the substraction all at once in one transaction
+        List<MatchItem> itemsWithSameGuid = matchRepository.findAllByGuid(matchItem.getGuid()); // TODO add quantity > 0 and Only ASK filter
+        List<MatchItem> askItems = new ArrayList<>(itemsWithSameGuid.stream().filter(i -> i.getBidOrAsk() == BidOrAsk.ASK).filter(i -> i.getQuantity() > 0).toList());
+
+        if (!askItems.isEmpty()) {
+            while (matchItem.getQuantity() >= 0 && !askItems.isEmpty()) {
+                MatchItem closestItem = getClosestByPrice(askItems, matchItem.getPrice());
+                subtractQty(closestItem, matchItem);
+                matchedItems.add(closestItem);
+                askItems.remove(closestItem);
+            }
         }
 
-        return result;
+        return matchedItems;
     }
 
-    private String matchAsk(MatchItem matchItem) {
-        return "";
+    // If its an ASK(SELL):
+    //- Search for all BIDs for the same GUID where quantity >=0
+    //- Find the closest bid by price
+    //- substract quantities (bid qty must not be negative)
+    //- If bid qty is not enough to supply the ask, find the next closest bid and repeat the process.
+    private List<MatchItem> matchAsk(MatchItem matchItem) {
+        List<MatchItem> matchedItems = new ArrayList<>();
+
+        List<MatchItem> itemsWithSameGuid = matchRepository.findAllByGuid(matchItem.getGuid()); // TODO add quantity > 0 and Only ASK filter
+        List<MatchItem> bidItems = new ArrayList<>(itemsWithSameGuid.stream().filter(i -> i.getBidOrAsk() == BidOrAsk.BID).filter(i -> i.getQuantity() > 0).toList());
+
+        if (!bidItems.isEmpty()) {
+            while (matchItem.getQuantity() >= 0 && !bidItems.isEmpty()) {
+                MatchItem closestItem = getClosestByPrice(bidItems, matchItem.getPrice());
+                subtractQty(closestItem, matchItem);
+                matchedItems.add(closestItem);
+                bidItems.remove(closestItem);
+            }
+        }
+
+        return matchedItems;
     }
 
     private MatchItem getClosestByPrice(List<MatchItem> matchItemList, BigDecimal price) {
@@ -82,13 +112,18 @@ public class MatchService {
         return closest;
     }
 
-    private boolean substractQty(MatchItem item1, MatchItem item2) {
-        if (item1.getQuantity() >= item2.getQuantity()) {
+    private void subtractQty(MatchItem item1, MatchItem item2) {
+        int item1Qty = item1.getQuantity();
+        int item2Qty = item2.getQuantity();
+        if (item1Qty >= item2Qty) {
             item1.setQuantity(item1.getQuantity() - item2.getQuantity());
+            item2.setQuantity(0);
         } else {
             item1.setQuantity(0);
+            item2.setQuantity(item2.getQuantity() - item1.getQuantity());
         }
-        return false;
+        matchRepository.save(item1);
+        matchRepository.save(item2);
     }
 
 

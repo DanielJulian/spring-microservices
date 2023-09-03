@@ -2,10 +2,7 @@ package com.dannyjulian.matchservice.model;
 
 import com.dannyjulian.matchservice.util.BidOrAsk;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -14,6 +11,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 public class MatchItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
