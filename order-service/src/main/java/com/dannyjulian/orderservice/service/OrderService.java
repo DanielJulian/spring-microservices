@@ -8,6 +8,8 @@ import com.dannyjulian.orderservice.model.Order;
 import com.dannyjulian.orderservice.model.OrderItem;
 import com.dannyjulian.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,8 +24,8 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-
     private final WebClient webClient;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
 
     public String placeOrder(OrderRequest orderRequest) {
@@ -57,6 +59,8 @@ public class OrderService {
         }
 
         if (responses.stream().allMatch(MatchResponse::isMatchSucceeded)) {
+            // publish Order Placed Event
+            applicationEventPublisher.publishEvent(orderRequest);
             return "All orders were placed and matched";
         } else {
             return "All orders were placed but not all matched";
