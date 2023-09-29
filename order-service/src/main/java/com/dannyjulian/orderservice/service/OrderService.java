@@ -9,7 +9,6 @@ import com.dannyjulian.orderservice.model.OrderItem;
 import com.dannyjulian.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -24,7 +23,7 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
     private final ApplicationEventPublisher applicationEventPublisher;
 
 
@@ -48,8 +47,8 @@ public class OrderService {
             MatchRequest request = getMatchRequest(item);
 
             // Call Match service and send notification message only if match was done.
-            MatchResponse matchResponse = webClient.post()
-                    .uri("http://localhost:8082/api/match")
+            MatchResponse matchResponse = webClientBuilder.build().post()
+                    .uri("http://match-service/api/match")
                     .body(Mono.just(request), MatchRequest.class)
                     .retrieve()
                     .bodyToMono(MatchResponse.class)
